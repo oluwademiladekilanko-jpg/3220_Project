@@ -1,91 +1,24 @@
 package org.example.backend;
 
-import java.sql.*;
+import org.example.backend.service.AppContext;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
+/** Transitional facade: same API as before, now delegating to the persistence layer. */
 public class tables {
+    public static final String url = AppContext.DEFAULT_URL;
 
-    //db url, kinda important
-    public static final String url = "jdbc:sqlite:./identifier.sqlite";
-
-    public static Connection connection(){
-        Connection connection = null;
-        try{
-            connection = DriverManager.getConnection(url);
-        }catch (SQLException e){
-            System.err.println("error: " + e.getMessage());
-        }
-        return connection;
-    }
-    public static void createTables(){
-
-        String patient = "CREATE TABLE IF NOT EXISTS patient (" +
-                " id INTEGER PRIMARY KEY," +
-                " name TEXT NOT NULL," +
-                " illness TEXT NOT NULL," +
-                " symptoms TEXT," +
-                " email TEXT UNIQUE NOT NULL," +
-                " password TEXT NOT NULL," +
-                " phone INT NOT NULL" +
-                ");";
-
-        String receptionist = "CREATE TABLE IF NOT EXISTS receptionist (" +
-                " id INTEGER PRIMARY KEY," +
-                " name TEXT NOT NULL," +
-                " email TEXT UNIQUE NOT NULL," +
-                " password TEXT NOT NULL," +
-                " phone INT NOT NULL" +
-                ");";
-
-        String doctor = "CREATE TABLE IF NOT EXISTS doctor (" +
-                " id INTEGER PRIMARY KEY," +
-                " name TEXT NOT NULL," +
-                " field TEXT NOT NULL," +
-                " email TEXT UNIQUE NOT NULL," +
-                " password TEXT NOT NULL," +
-                " phone INT NOT NULL," +
-                " emrgphone INT NOT NULL" +
-                ");";
-
-        String appointment = "CREATE TABLE IF NOT EXISTS appointment (" +
-                " id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                " p_id INTEGER NOT NULL," +
-                " d_id INTEGER NOT NULL," +
-                " date TEXT NOT NULL," +
-                " location TEXT NOT NULL," +
-                " FOREIGN KEY (p_id) REFERENCES patient(id)," +
-                " FOREIGN KEY (d_id) REFERENCES doctor(id)" +
-                ");";
-
-        String availability = "CREATE TABLE IF NOT EXISTS availability (" +
-                " id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                " d_id INTEGER NOT NULL," +
-                " slot TEXT NOT NULL," +
-                " UNIQUE (d_id, slot)," +
-                " FOREIGN KEY (d_id) REFERENCES doctor(id)" +
-                ");";
-
-
-        try (Connection conn = connection(); Statement stmt = conn.createStatement()) {
-            stmt.execute(patient);
-            stmt.execute(receptionist);
-            stmt.execute(doctor);
-            stmt.execute(appointment);
-            stmt.execute(availability);
-            System.out.println("Database and table created successfully.");
-
+    public static Connection connection() {
+        try {
+            return AppContext.get().connections().getConnection();
         } catch (SQLException e) {
-            System.err.println("Database error: " + e.getMessage());
+            System.err.println("error: " + e.getMessage());
+            return null;
         }
-
-//        String query = "INSERT INTO doctor (id, name, field, email, password, phone, emrgphone) VALUES (1, 'john', 'family medicine', 'john@doctor.ca', 'a', 5550198, 8967456);";
-//
-//        //put sql querys here because for some reason intellij premium is required to do edits to sqlite. those greedy cucks.
-//        try (Connection conn = connection(); Statement stmt = conn.createStatement()){
-//            stmt.execute(query);
-//            System.out.println("query executed");
-//        }catch (SQLException e){
-//            System.err.println("fix it moron -> " + e.getMessage());
-//        }
     }
 
+    public static void createTables() {
+        AppContext.get().schema().initialize();
+    }
 }
