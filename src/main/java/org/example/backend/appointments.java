@@ -1,237 +1,126 @@
 package org.example.backend;
 
-import java.sql.*;
+import org.example.Objects.Appointment;
+import org.example.Objects.Doctor;
+import org.example.Objects.Role;
+import org.example.Objects.TimeSlot;
+import org.example.backend.service.AppContext;
+import org.example.backend.service.AppointmentService;
+import org.example.backend.service.SessionContext;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
+/**
+ * Transitional facade: keeps the String[] row API the UI pages already use, but holds no logic or SQL.
+ * Rules live in AppointmentService; queries live in the repositories.
+ */
 public class appointments {
+    private static final DateTimeFormatter FLEXIBLE_TIME = DateTimeFormatter.ofPattern("H:mm");
 
-    private static final DateTimeFormatter time = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    public static String now(){
-        return LocalDateTime.now().format(time);
+    private static AppointmentService service() {
+        return AppContext.get().appointments();
     }
 
-    public static boolean book(int pid, int did, String slot){
-        String sql = "INSERT INTO appointment (p_id, d_id, date, location) "
-                + "SELECT ?, ?, ?, 'Clinic' "
-                + "WHERE EXISTS (SELECT 1 FROM availability WHERE d_id = ? AND slot = ?) "
-                + "AND NOT EXISTS (SELECT 1 FROM appointment WHERE d_id = ? AND date = ?)";
+    public static String now() {
+        return service().now().format(TimeSlot.FORMAT);
+    }
 
-        try(Connection connection = tables.connection(); PreparedStatement stmt = connection.prepareStatement(sql)){
-            stmt.setInt(1, pid);
-            stmt.setInt(2, did);
-            stmt.setString(3, slot);
-            stmt.setInt(4, did);
-            stmt.setString(5, slot);
-            stmt.setInt(6, did);
-            stmt.setString(7, slot);
-            return stmt.executeUpdate() == 1;
-        }catch (SQLException e){
-            System.err.println("well that didnt work: " + e.getMessage());
+    public static boolean book(int pid, int did, String slot) {
+        try {
+            return service().book(pid, did, TimeSlot.parse(slot));
+        } catch (DateTimeParseException e) {
             return false;
         }
     }
 
-    public static boolean cancelOwn(int aid, int pid){
-        String sql = "DELETE FROM appointment WHERE id = ? AND p_id = ? AND date > ?";
-
-        try (Connection con = tables.connection(); PreparedStatement stmt = con.prepareStatement(sql)){
-            stmt.setInt(1, aid);
-            stmt.setInt(2, pid);
-            stmt.setString(3, now());
-            return stmt.executeUpdate() == 1;
-        }catch (SQLException e){
-            System.err.println("that also didnt work: " + e.getMessage());
-            return false;
-        }
+    /** A patient cancelling their own future appointment. */
+    public static boolean cancelOwn(int aid, int pid) {
+        return service().cancel(aid, new SessionContext(Role.PATIENT, pid));
     }
 
-    public static boolean cancelAny(int aid){
-        String sql = "DELETE FROM appointment WHERE id = ?";
-        try (Connection con = tables.connection(); PreparedStatement stmt = con.prepareStatement(sql)){
-            stmt.setInt(1, aid);
-            return stmt.executeUpdate() == 1;
-        }catch (SQLException e){
-            System.err.println("u kinda suck at this");
-            return false;
-        }
+    /** Only succeeds when the logged-in user is a receptionist. */
+    public static boolean cancelAny(int aid) {
+        return service().cancel(aid, Session.current());
     }
 
-    public static List<String[]> forPatient(int pid){
+    public static List<String[]> forPatient(int pid) {
         List<String[]> rows = new ArrayList<>();
-        String sql = "SELECT a.id, a.date, d.name AS doctor_name, d.field, a.location "
-                + "FROM appointment a JOIN doctor d ON d.id = a.d_id "
-                + "WHERE a.p_id = ? ORDER BY a.date";
-        try(Connection con = tables.connection(); PreparedStatement stmt = con.prepareStatement(sql)){
-            stmt.setInt(1, pid);
-            try(ResultSet rs = stmt.executeQuery()){
-                while (rs.next()){
-                    rows.add(new String[]{
-                            rs.getString("id"),
-                            rs.getString("date"),
-                            rs.getString("name"),
-                            rs.getString("field"),
-                            rs.getString("location")
-                    });
-                }
-            }
-        }catch (SQLException e){
-            System.err.println("like really suck at this: " + e.getMessage());
+        for (Appointment a : service().appointmentsForPatient(pid)) {
+            rows.add(new String[]{
+                    String.valueOf(a.getId()),
+                    a.getDate().format(TimeSlot.FORMAT),
+                    a.getDoc().getName(),
+                    a.getDoc().getField(),
+                    a.getLocation()});
         }
         return rows;
     }
 
     public static List<String[]> fields() {
         List<String[]> rows = new ArrayList<>();
-        String sql = "SELECT DISTINCT field FROM doctor ORDER BY field";
-
-        try (Connection con = tables.connection();
-             PreparedStatement stmt = con.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                rows.add(new String[]{rs.getString("field")});
-            }
-        } catch (SQLException e) {
-            System.err.println("fields failed: " + e.getMessage());
+        for (String field : service().doctorFields()) {
+            rows.add(new String[]{field});
         }
         return rows;
     }
 
     public static List<String[]> doctors(String field) {
         List<String[]> rows = new ArrayList<>();
-        boolean filtered = field != null && !field.isEmpty();
-        String sql = filtered
-                ? "SELECT id, name, field FROM doctor WHERE field = ? ORDER BY name"
-                : "SELECT id, name, field FROM doctor ORDER BY name";
-
-        try (Connection con = tables.connection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-
-            if (filtered) {
-                stmt.setString(1, field);
-            }
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    rows.add(new String[]{
-                            rs.getString("id"),
-                            rs.getString("name"),
-                            rs.getString("field")
-                    });
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("doctors failed: " + e.getMessage());
+        for (Doctor d : service().doctors(field)) {
+            rows.add(new String[]{String.valueOf(d.getId()), d.getName(), d.getField()});
         }
         return rows;
     }
 
     public static List<String[]> openSlots(int doctorId) {
         List<String[]> rows = new ArrayList<>();
-        String sql = "SELECT slot FROM availability "
-                + "WHERE d_id = ? AND slot > ? "
-                + "AND slot NOT IN (SELECT date FROM appointment WHERE d_id = ?) "
-                + "ORDER BY slot";
-
-        try (Connection con = tables.connection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-
-            stmt.setInt(1, doctorId);
-            stmt.setString(2, now());
-            stmt.setInt(3, doctorId);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    rows.add(new String[]{rs.getString("slot")});
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("openSlots failed: " + e.getMessage());
+        for (TimeSlot s : service().openSlots(doctorId)) {
+            rows.add(new String[]{s.format()});
         }
         return rows;
     }
 
     public static List<String[]> allSlots(int doctorId) {
         List<String[]> rows = new ArrayList<>();
-        String sql = "SELECT slot, "
-                + "EXISTS(SELECT 1 FROM appointment a WHERE a.d_id = availability.d_id AND a.date = availability.slot) AS booked "
-                + "FROM availability WHERE d_id = ? ORDER BY slot";
-
-        try (Connection con = tables.connection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-
-            stmt.setInt(1, doctorId);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    rows.add(new String[]{
-                            rs.getString("slot"),
-                            rs.getString("booked")
-                    });
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("allSlots failed: " + e.getMessage());
+        for (TimeSlot s : service().allSlots(doctorId)) {
+            rows.add(new String[]{s.format(), s.isBooked() ? "1" : "0"});
         }
         return rows;
     }
 
     public static List<String[]> all() {
         List<String[]> rows = new ArrayList<>();
-        String sql = "SELECT a.id, a.date, p.name AS patient_name, d.name AS doctor_name "
-                + "FROM appointment a "
-                + "JOIN patient p ON p.id = a.p_id "
-                + "JOIN doctor d ON d.id = a.d_id "
-                + "ORDER BY a.date";
-
-        try (Connection con = tables.connection();
-             PreparedStatement stmt = con.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                rows.add(new String[]{
-                        rs.getString("id"),
-                        rs.getString("date"),
-                        rs.getString("patient_name"),
-                        rs.getString("doctor_name")
-                });
-            }
-        } catch (SQLException e) {
-            System.err.println("all failed: " + e.getMessage());
+        for (Appointment a : service().allAppointments()) {
+            rows.add(new String[]{
+                    String.valueOf(a.getId()),
+                    a.getDate().format(TimeSlot.FORMAT),
+                    a.getPatient().getName(),
+                    a.getDoc().getName()});
         }
         return rows;
     }
 
-    //receptionist specific
+    // receptionist specific (enforced in AppointmentService)
     public static void addSlot(int doctorId, LocalDate date, String time) {
-        String sql = "INSERT OR IGNORE INTO availability (d_id, slot) VALUES (?, ?)";
-
-        try (Connection con = tables.connection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-
-            stmt.setInt(1, doctorId);
-            stmt.setString(2, date + " " + time);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("addSlot failed: " + e.getMessage());
+        try {
+            LocalDateTime slot = LocalDateTime.of(date, LocalTime.parse(time.trim(), FLEXIBLE_TIME));
+            service().addSlot(Session.current(), doctorId, slot);
+        } catch (DateTimeParseException e) {
+            System.err.println("addSlot: bad time '" + time + "'");
         }
     }
 
     public static void removeSlot(int doctorId, String slot) {
-        String sql = "DELETE FROM availability WHERE d_id = ? AND slot = ?";
-
-        try (Connection con = tables.connection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-
-            stmt.setInt(1, doctorId);
-            stmt.setString(2, slot);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("removeSlot failed: " + e.getMessage());
+        try {
+            service().removeSlot(Session.current(), doctorId, TimeSlot.parse(slot));
+        } catch (DateTimeParseException e) {
+            System.err.println("removeSlot: bad slot '" + slot + "'");
         }
     }
 }

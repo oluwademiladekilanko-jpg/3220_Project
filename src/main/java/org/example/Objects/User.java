@@ -1,48 +1,31 @@
 package org.example.Objects;
 
-public class User {
+public abstract class User {
     private String name;
     private String email;
-    private String password;
-    private int phone;
+    private String password; // holds the password HASH, never plain text
+    private long phone;
 
-
-    public User(String name, String email, String password, int phone){
+    protected User(String name, String email, String password, long phone) {
         this.name = name;
         this.email = email;
         this.password = password;
         this.phone = phone;
     }
 
-    public int getPhone() {
-        return phone;
-    }
+    public abstract int getId();
 
-    public void setPhone(int phone) {
-        this.phone = phone;
-    }
+    public abstract Role getRole();
 
-    public String getName() {
-        return name;
-    }
+    public long getPhone() { return phone; }
+    public void setPhone(long phone) { this.phone = phone; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 }
