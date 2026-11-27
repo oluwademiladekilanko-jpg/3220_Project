@@ -2,97 +2,135 @@ package org.example.UI;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.layout.*;
-import javafx.scene.text.Text;
+import javafx.scene.Parent;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.example.Objects.UIObjects.StyledButton;
+import org.example.Objects.UIObjects.StyledPasswordField;
 import org.example.Objects.UIObjects.StyledTextField;
-import org.example.backend.login;
+import org.example.Objects.UIObjects.Theme;
+import org.example.backend.Session;
+import org.example.backend.service.AppContext;
+import org.example.backend.service.SessionContext;
 
-public class LoginPage extends BorderPane {
+import java.util.Optional;
 
-    public LoginPage(Stage primaryStage){
-        VBox loginForm = createLoginForm(primaryStage);
-        this.setCenter(loginForm);
-        primaryStage.setWidth(1000);
-        primaryStage.setHeight(700);
-        primaryStage.show();
+/** Split-screen sign in: brand panel on the left, a centred form card on the right. */
+public class LoginPage extends HBox {
+    private final Stage stage;
+    private final StyledTextField email = new StyledTextField("you@example.com");
+    private final StyledPasswordField password = new StyledPasswordField("Enter your password");
+    private final Label message = Theme.message();
+
+    public LoginPage(Stage stage) {
+        this.stage = stage;
+        setStyle(Theme.rootStyle());
+        Region form = formPanel();
+        HBox.setHgrow(form, Priority.ALWAYS);
+        getChildren().addAll(brandPanel(), form);
     }
 
-    private VBox createLoginForm(Stage primaryStage){
-        VBox form = new VBox(24);
-        form.setPadding(new Insets(40, 40, 40, 40));
-        form.setStyle("-fx-border-color: #d3d3d3; -fx-border-radius: 8; -fx-background-radius: 8;");
-        form.setAlignment(Pos.CENTER);
-        form.setMaxWidth(400);
-        form.setMaxHeight(Region.USE_PREF_SIZE);
-        Text title = new Text("Login");
-        title.setStyle("-fx-font-size: 48px; -fx-font-weight: 700;");
+    private VBox brandPanel() {
+        VBox panel = new VBox(18);
+        panel.setPadding(new Insets(48));
+        panel.setPrefWidth(460);
+        panel.setMinWidth(380);
+        panel.setStyle("-fx-background-color: linear-gradient(to bottom right, #1B1B3A, #0A0A0B);");
 
-        Text email = new Text("Email: ");
-        Text password = new Text("Password: ");
+        HBox brand = new HBox(10, Theme.brandMark(30, true), whiteText("Clinic Portal", 18, "bold", "white"));
+        brand.setAlignment(Pos.CENTER_LEFT);
 
-        email.setStyle("-fx-font-size: 20;");
-        password.setStyle("-fx-font-size: 20;");
-        StyledTextField emailField = new StyledTextField("john@example.com");
-        StyledTextField passwordField = new StyledTextField("12bucklemyshoe");
+        Label headline = whiteText("Appointments without the phone tag.", 32, "bold", "white");
+        headline.setWrapText(true);
+        Label sub = whiteText("One place for patients, doctors and the front desk.", 14, "normal", "rgba(255,255,255,0.8)");
+        sub.setWrapText(true);
 
-        GridPane fields = new GridPane();
-        fields.setHgap(15);
-        fields.setVgap(15);
-        ColumnConstraints labelCol = new ColumnConstraints();
-        ColumnConstraints fieldCol = new ColumnConstraints();
-        fieldCol.setHgrow(Priority.ALWAYS);
-        fields.getColumnConstraints().addAll(labelCol, fieldCol);
-        fields.addRow(0, email, emailField);
-        fields.addRow(1, password, passwordField);
+        VBox features = new VBox(10,
+                whiteText("-  Book an open time in a few clicks", 13, "normal", "rgba(255,255,255,0.9)"),
+                whiteText("-  Doctors see their day at a glance", 13, "normal", "rgba(255,255,255,0.9)"),
+                whiteText("-  Reception manages availability and cancellations", 13, "normal", "rgba(255,255,255,0.9)"));
 
-        VBox buttons = new VBox();
-        buttons.setSpacing(10);
-        StyledButton button = new StyledButton("Login");
-        StyledButton button2 = new StyledButton("Sign Up");
-        button.setMaxWidth(Double.MAX_VALUE);
-        button2.setMaxWidth(Double.MAX_VALUE);
-        buttons.getChildren().addAll(button, button2);
-
-        Text errorText = new Text();
-        errorText.setStyle("-fx-fill: #c0392b; -fx-font-size: 14;");
-        errorText.setVisible(false);
-        errorText.managedProperty().bind(errorText.visibleProperty());
-
-        Runnable doLogin = () -> {
-            String emailText = emailField.getText();
-            String passwordText = passwordField.getText();
-
-            if (emailText == null || emailText.isBlank() || passwordText.isEmpty()) {
-                showError(errorText, "Enter your email and password");
-                return;
-            }
-
-            String table = login.login(emailText, passwordText);
-            switch (table) {
-                case "receptionist" -> primaryStage.setScene(new Scene(new ReceptionistPageHome(primaryStage), 1000, 700));
-                case "doctor" -> primaryStage.setScene(new Scene(new DoctorPageHome(primaryStage), 1000, 700));
-                case "patient" -> primaryStage.setScene(new Scene(new PatientPageHome(primaryStage), 1000, 700));
-                default -> {
-                    showError(errorText, "Invalid email or password");
-                    passwordField.clear();
-                }
-            }
-        };
-
-        button.setOnAction(e -> doLogin.run());
-        emailField.setOnAction(e -> doLogin.run());
-        passwordField.setOnAction(e -> doLogin.run());
-        button2.setOnAction(e -> primaryStage.setScene(new Scene(new SignupPage(primaryStage), 1000, 700)));
-
-        form.getChildren().addAll(title, fields, errorText, buttons);
-        return form;
-    }
-    private void showError(Text target, String msg) {
-        target.setText(msg);
-        target.setVisible(true);
+        panel.getChildren().addAll(brand, Theme.spacer(), headline, sub, features, Theme.spacer(),
+                whiteText("COMP 3220 Clinic Appointment Booking System", 11, "normal", "rgba(255,255,255,0.6)"));
+        return panel;
     }
 
+    private StackPane formPanel() {
+        StackPane panel = new StackPane();
+        panel.setStyle("-fx-background-color: linear-gradient(to bottom right, #101018, #0A0A0B 60%);");
+
+        email.setOnAction(e -> password.requestFocus());
+        password.setOnAction(e -> attempt());
+
+        StyledButton submit = new StyledButton("Continue");
+        submit.setMaxWidth(Double.MAX_VALUE);
+        submit.setOnAction(e -> attempt());
+
+        Label hint = Theme.text("Doctors sign in with @doctor.ca and reception with @clinic.ca. Everyone else is a patient.",
+                12, Theme.fg(Theme.Tone.BLUE), false);
+        hint.setWrapText(true);
+        hint.setStyle(hint.getStyle() + " -fx-background-color: " + Theme.bg(Theme.Tone.BLUE) + "; -fx-background-radius: 8; -fx-padding: 10 12;");
+        hint.setMaxWidth(Double.MAX_VALUE);
+
+        Hyperlink create = new Hyperlink("Create an account");
+        create.setStyle("-fx-text-fill: " + Theme.ACCENT_TEXT + "; -fx-font-weight: 600; -fx-padding: 0; -fx-border-color: transparent;");
+        create.setOnAction(e -> stage.getScene().setRoot(new SignupPage(stage)));
+        HBox footer = new HBox(6, Theme.text("New to the clinic?", 13, Theme.TEXT_2, false), create);
+        footer.setAlignment(Pos.CENTER);
+
+        VBox card = Theme.card();
+        card.setSpacing(16);
+        card.setPadding(new Insets(32));
+        card.setPrefWidth(400);
+        card.getChildren().addAll(
+                Theme.brandMark(32, false),
+                new VBox(4, Theme.text("Welcome back", 22, Theme.TEXT, true), Theme.subtitle("Sign in to your clinic account")),
+                Theme.labeled("Email address", email),
+                Theme.labeled("Password", password),
+                message, submit, hint, footer);
+
+        VBox wrap = new VBox(14, card, Theme.text("Secured by Clinic Portal", 11, Theme.TEXT_3, false));
+        wrap.setAlignment(Pos.CENTER);
+        wrap.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        panel.getChildren().add(wrap);
+        return panel;
+    }
+
+    private void attempt() {
+        String mail = email.getText();
+        String pw = password.getText();
+        if (mail == null || mail.trim().isEmpty() || pw == null || pw.isEmpty()) {
+            Theme.flash(message, "Enter your email and password.", Theme.Tone.RED);
+            return;
+        }
+        Optional<SessionContext> result = AppContext.get().auth().login(mail, pw);
+        if (!result.isPresent()) {
+            Theme.flash(message, "Incorrect email or password.", Theme.Tone.RED);
+            password.clear();
+            return;
+        }
+        SessionContext ctx = result.get();
+        Session.id = ctx.getUserId();
+        Session.role = ctx.getRole().getTableName();
+
+        Parent next;
+        switch (ctx.getRole()) {
+            case DOCTOR: next = new DoctorPageHome(stage); break;
+            case RECEPTIONIST: next = new ReceptionistPageHome(stage); break;
+            default: next = new PatientPageHome(stage);
+        }
+        stage.getScene().setRoot(next);
+    }
+
+    private static Label whiteText(String s, int size, String weight, String color) {
+        Label l = new Label(s);
+        l.setStyle("-fx-font-size: " + size + "px; -fx-font-weight: " + weight + "; -fx-text-fill: " + color + ";");
+        return l;
+    }
 }
