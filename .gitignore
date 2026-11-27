@@ -42,3 +42,9 @@ bin/
 ### Mac OS ###
 .DS_Store
 identifier.sqlite
+
+target/
+build/
+.gradle/
+.idea/
+*.sqlite
