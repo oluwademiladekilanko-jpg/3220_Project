@@ -1,0 +1,31 @@
+/* Dark styling for the parts JavaFX draws outside our own panes: dropdown lists, date picker, dialogs, scroll bars. */
+.combo-box .list-cell { -fx-text-fill: #EDEDEF; -fx-background-color: transparent; }
+.combo-box-popup .list-view { -fx-background-color: #111113; -fx-border-color: #26262B; }
+.combo-box-popup .list-view .list-cell { -fx-background-color: #111113; -fx-text-fill: #EDEDEF; }
+.combo-box-popup .list-view .list-cell:hover,
+.combo-box-popup .list-view .list-cell:filled:selected { -fx-background-color: #1B1B33; -fx-text-fill: #EDEDEF; }
+.combo-box-base .arrow, .date-picker .arrow-button .arrow { -fx-background-color: #A1A1AA; }
+.combo-box-base .arrow-button, .date-picker .arrow-button { -fx-background-color: transparent; }
+.date-picker .text-field { -fx-text-fill: #EDEDEF; -fx-background-color: transparent; -fx-prompt-text-fill: #71717A; }
+.date-picker-popup { -fx-background-color: #111113; -fx-border-color: #26262B; }
+.date-picker-popup .month-year-pane { -fx-background-color: #16161A; }
+.date-picker-popup .label { -fx-text-fill: #EDEDEF; }
+.date-picker-popup .spinner .button { -fx-background-color: transparent; }
+.date-picker-popup .spinner .button .left-arrow, .date-picker-popup .spinner .button .right-arrow { -fx-background-color: #A1A1AA; }
+.date-picker-popup .day-name-cell, .date-picker-popup .week-number-cell { -fx-text-fill: #71717A; -fx-background-color: #111113; }
+.date-picker-popup .day-cell { -fx-background-color: #111113; -fx-text-fill: #EDEDEF; }
+.date-picker-popup .day-cell:hover { -fx-background-color: #1B1B33; }
+.date-picker-popup .day-cell:selected { -fx-background-color: #5B5BD6; -fx-text-fill: white; }
+.date-picker-popup .day-cell:today { -fx-border-color: #5B5BD6; }
+.date-picker-popup .day-cell:disabled, .date-picker-popup .day-cell:other-month { -fx-text-fill: #52525B; }
+.dialog-pane { -fx-background-color: #111113; }
+.dialog-pane .content.label, .dialog-pane .label { -fx-text-fill: #EDEDEF; }
+.dialog-pane .button-bar .container { -fx-background-color: #111113; }
+.dialog-pane .button { -fx-background-color: #5B5BD6; -fx-text-fill: white; -fx-background-radius: 8; -fx-cursor: hand; }
+.dialog-pane .button:hover { -fx-background-color: #6B6BE3; }
+.scroll-pane, .scroll-pane > .viewport { -fx-background-color: #0A0A0B; }
+.scroll-bar { -fx-background-color: transparent; }
+.scroll-bar .thumb { -fx-background-color: #2E2E35; -fx-background-radius: 6; }
+.scroll-bar .track { -fx-background-color: transparent; }
+.scroll-bar .increment-button, .scroll-bar .decrement-button { -fx-padding: 0; -fx-background-color: transparent; }
+.scroll-bar .increment-arrow, .scroll-bar .decrement-arrow { -fx-padding: 0; -fx-shape: ""; }

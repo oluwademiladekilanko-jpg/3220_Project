@@ -1,14 +1,41 @@
 package org.example.Objects.UIObjects;
+
+import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 
 public class StyledButton extends Button {
-    private static final String idle = "-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 18;";
-    private static final String hover = "-fx-background-color: #1d4ed8; -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 18;";
+    public enum Kind { PRIMARY, SECONDARY, GHOST, DANGER }
 
-    public StyledButton(String text){
+    private final Kind kind;
+
+    /** Kept for compatibility with older pages: a plain StyledButton is a primary button. */
+    public StyledButton(String text) {
+        this(text, Kind.PRIMARY);
+    }
+
+    public StyledButton(String text, Kind kind) {
         super(text);
-        setStyle(idle);
-        setOnMouseEntered(e->setStyle(hover));
-        setOnMouseExited(e->setStyle(idle));
+        this.kind = kind;
+        setCursor(Cursor.HAND);
+        apply(false);
+        setOnMouseEntered(e -> apply(true));
+        setOnMouseExited(e -> apply(false));
+    }
+
+    private void apply(boolean hover) {
+        String base = "-fx-background-radius: 8; -fx-border-radius: 8; -fx-padding: 8 16; -fx-font-size: 13px; -fx-font-weight: 600; ";
+        switch (kind) {
+            case SECONDARY:
+                setStyle(base + "-fx-background-color: " + (hover ? "#1C1C20" : "#141417") + "; -fx-border-color: #2E2E35; -fx-text-fill: " + Theme.TEXT + ";");
+                break;
+            case GHOST:
+                setStyle(base + "-fx-background-color: " + (hover ? "#1C1C20" : "transparent") + "; -fx-text-fill: " + Theme.TEXT_2 + ";");
+                break;
+            case DANGER:
+                setStyle(base + "-fx-background-color: " + (hover ? "#4A1D22" : "#34151A") + "; -fx-text-fill: #FF7A72;");
+                break;
+            default:
+                setStyle(base + "-fx-background-color: " + (hover ? Theme.ACCENT_HOVER : Theme.ACCENT) + "; -fx-text-fill: white;");
+        }
     }
 }
