@@ -61,7 +61,7 @@ public class PatientPageHome extends GlobalPageStandard {
             }
         }
         String nextValue = next == null ? "Nothing booked" : Theme.shortDate(next.getDate());
-        String nextHint = next == null ? "Book your first visit" : "with " + next.getDoc().getName();
+        String nextHint = next == null ? "Book your first visit" : "with " + next.getDoctor().getName();
 
         HBox stats = new HBox(16,
                 Theme.statCard("Upcoming", String.valueOf(upcoming), upcoming == 1 ? "appointment" : "appointments"),
@@ -183,8 +183,8 @@ public class PatientPageHome extends GlobalPageStandard {
             }
             rows.add(Arrays.<Node>asList(
                     Theme.text(Theme.when(a.getDate()), 13, Theme.TEXT, true),
-                    Theme.text(a.getDoc().getName(), 13, Theme.TEXT, false),
-                    Theme.text(a.getDoc().getField(), 13, Theme.TEXT_2, false),
+                    Theme.text(a.getDoctor().getName(), 13, Theme.TEXT, false),
+                    Theme.text(a.getDoctor().getField(), 13, Theme.TEXT_2, false),
                     Theme.text(a.getLocation(), 13, Theme.TEXT_2, false),
                     Theme.lozenge(future ? "Upcoming" : "Completed", future ? Theme.Tone.GREEN : Theme.Tone.NEUTRAL),
                     action));

@@ -31,10 +31,10 @@ public class SignupService {
                 (n, e, h, p) -> new Patient(0, ill, sym, n, e, h, p));
     }
 
-    public String signupDoctor(String name, String email, String password, String phone, String field, String emrgphone) {
-        if (blank(field) || blank(emrgphone)) return "all fields required";
+    public String signupDoctor(String name, String email, String password, String phone, String field, String emergencyPhone) {
+        if (blank(field) || blank(emergencyPhone)) return "all fields required";
         if (email == null || Role.fromEmail(email) != Role.DOCTOR) return "invalid doctor email";
-        Long emergency = parsePhone(emrgphone);
+        Long emergency = parsePhone(emergencyPhone);
         if (emergency == null) return "invalid phone";
         final String f = field.trim();
         final long em = emergency;

@@ -49,7 +49,7 @@ public class SQLiteUserRepository implements UserRepository {
             case DOCTOR: {
                 Doctor d = (Doctor) user;
                 sql = "INSERT INTO doctor (name, email, password, phone, field, emrgphone) VALUES (?, ?, ?, ?, ?, ?)";
-                params = new Object[]{d.getName(), d.getEmail(), d.getPassword(), d.getPhone(), d.getField(), d.getEmrgphone()};
+                params = new Object[]{d.getName(), d.getEmail(), d.getPassword(), d.getPhone(), d.getField(), d.getEmergencyPhone()};
                 break;
             }
             case RECEPTIONIST: {

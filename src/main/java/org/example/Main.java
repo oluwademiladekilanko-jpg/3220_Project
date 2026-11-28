@@ -5,7 +5,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.example.Objects.UIObjects.Theme;
 import org.example.UI.LoginPage;
-import org.example.backend.tables;
+import org.example.backend.service.AppContext;
 
 public class Main extends Application {
     public static void main(String[] args) {
@@ -14,7 +14,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        tables.createTables();
+        AppContext.get().schema().initialize();
         Scene scene = new Scene(new LoginPage(primaryStage), 1100, 720);
         String css = Theme.stylesheet();
         if (css != null) scene.getStylesheets().add(css);

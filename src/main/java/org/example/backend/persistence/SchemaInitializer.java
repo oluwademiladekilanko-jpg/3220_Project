@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-/** Creates the tables and constraints. Replaces tables.createTables(). */
+/** Creates the tables and constraints. Called once at application start-up. */
 public class SchemaInitializer {
     private final ConnectionProvider connections;
 

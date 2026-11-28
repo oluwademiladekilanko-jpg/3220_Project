@@ -1,25 +1,22 @@
 package org.example.Objects;
 
 public class Patient extends User {
-    private int patientID;
+    private final int id;
     private String illness;
     private String symptoms;
 
-    public Patient(int patientID, String illness, String symptoms, String name, String email, String password, long phone) {
+    public Patient(int id, String illness, String symptoms, String name, String email, String password, long phone) {
         super(name, email, password, phone);
-        this.patientID = patientID;
+        this.id = id;
         this.illness = illness;
         this.symptoms = symptoms;
     }
 
     @Override
-    public int getId() { return patientID; }
+    public int getId() { return id; }
 
     @Override
     public Role getRole() { return Role.PATIENT; }
-
-    public int getPatientID() { return patientID; }
-    public void setPatientID(int patientID) { this.patientID = patientID; }
 
     public String getIllness() { return illness; }
     public void setIllness(String illness) { this.illness = illness; }
