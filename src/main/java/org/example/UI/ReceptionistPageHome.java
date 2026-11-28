@@ -103,7 +103,7 @@ public class ReceptionistPageHome extends GlobalPageStandard {
             rows.add(Arrays.<Node>asList(
                     Theme.text(Theme.when(a.getDate()), 13, Theme.TEXT, true),
                     who,
-                    Theme.text(a.getDoc().getName(), 13, Theme.TEXT, false),
+                    Theme.text(a.getDoctor().getName(), 13, Theme.TEXT, false),
                     Theme.lozenge(future ? "Upcoming" : "Completed", future ? Theme.Tone.GREEN : Theme.Tone.NEUTRAL),
                     future ? (Node) cancel : new Label("")));
         }

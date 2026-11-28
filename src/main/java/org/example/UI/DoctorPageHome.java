@@ -38,7 +38,7 @@ public class DoctorPageHome extends GlobalPageStandard {
     private List<Appointment> mine() {
         List<Appointment> result = new ArrayList<>();
         for (Appointment a : service.allAppointments()) {
-            if (a.getDoc().getId() == doctorId) result.add(a);
+            if (a.getDoctor().getId() == doctorId) result.add(a);
         }
         return result;
     }

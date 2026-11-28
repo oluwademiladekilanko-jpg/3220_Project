@@ -1,19 +1,16 @@
 package org.example.Objects;
 
 public class Receptionist extends User {
-    private int receptionistID;
+    private final int id;
 
-    public Receptionist(int receptionistID, String name, String email, String password, long phone) {
+    public Receptionist(int id, String name, String email, String password, long phone) {
         super(name, email, password, phone);
-        this.receptionistID = receptionistID;
+        this.id = id;
     }
 
     @Override
-    public int getId() { return receptionistID; }
+    public int getId() { return id; }
 
     @Override
     public Role getRole() { return Role.RECEPTIONIST; }
-
-    public int getReceptionistID() { return receptionistID; }
-    public void setReceptionistID(int receptionistID) { this.receptionistID = receptionistID; }
 }
